@@ -1,7 +1,7 @@
 class GameSession:
 
     def __init__(self, filename = ""):
-        self.__lastmsg = ""
+        self.__commands = list()
         pass
 
     def __setattr__(self, key, value):
@@ -18,4 +18,10 @@ class GameSession:
 
     def get_last_message(self):
         return self.__lastmsg
+
+    def execute(self, command):
+        pass
+
+    def undo(self):
+        pass
 
