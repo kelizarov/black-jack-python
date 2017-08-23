@@ -1,6 +1,7 @@
 from InputHandler import InputHandler
-from GameMode import GameMode
+from GameMode import GameMode, GameState
 from GameSession import GameSession
+import os
 
 
 class Game:
@@ -9,31 +10,14 @@ class Game:
         self.__session = GameSession()
         self.__input = InputHandler()
         self.__mode = GameMode()
-        self.__commands = {
-            "start_game": self.__mode.start_game,
-            "add_score": self.__mode.add_score,
-            "set_score": self.__mode.set_score,
-            "add_player": self.__mode.add_player,
-            "add_ai": self.__mode.add_ai,
-            "remove_player": self.__mode.remove_player,
-            "show_players": self.__mode.show_players,
-            "show_player": self.__mode.show_player,
-            "reset": self.__mode.reset_score_for_all_players,
-            "exit": self.exit_game
-        }
+        self.commands = {}
 
     def __event_tick(self):
-        while True:
+        while self.__mode.is_running:
             try:
-                cmd = self.__input.get_input()
-                for key, value in self.__commands.items():
-                    if key == cmd[0]:
-                        if len(cmd) == 3:
-                            value(cmd[1], cmd[2])
-                        elif len(cmd) == 2:
-                            value(cmd[1])
-                        else:
-                            value()
+                line = input()
+                self.__input.execute_command(line, self.__mode.commands)
+                self.__mode.players_think()
             except EOFError:
                 break
             except IndexError as err:
@@ -45,14 +29,16 @@ class Game:
         self.__event_end_play()
 
     def __event_begin_play(self):
+        if os.path.isfile("temp"):
+            self.__session.import_binary("temp")
         self.__event_tick()
 
     def __event_end_play(self):
-        print(">>> Exiting the game")
+        print(">>> Closing the game")
+        if self.__mode.state is not GameState.END:
+            self.__session.export_binary(self.__input.get_history())
+        self.__input.dump_history()
 
     def init_game(self):
         self.__event_begin_play()
-
-    def exit_game(self):
-        raise EOFError
 

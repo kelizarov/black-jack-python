@@ -4,6 +4,7 @@ class Player:
         self.name = name
         self.score = score
         self.cards = 0
+        self.commands = {}
 
     def add_score(self, score):
         self.score = self.score + score
