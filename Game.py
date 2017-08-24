@@ -9,35 +9,46 @@ class Game:
     def __init__(self):
         self.__session = GameSession()
         self.__input = InputHandler()
-        self.__mode = GameMode()
+        self.__mode = GameMode(True)
         self.commands = {}
 
     def __event_tick(self):
         while self.__mode.is_running:
             try:
+                self.__mode.players_think()
                 line = input()
                 self.__input.execute_command(line, self.__mode.commands)
-                self.__mode.players_think()
-            except EOFError:
-                break
             except IndexError as err:
                 print("IndexError: {0}".format(err))
                 continue
             except ValueError as err:
                 print("ValueError: {0}".format(err))
                 continue
+            except TypeError as err:
+                print("TypeError: {0}".format(err))
+                continue
+            except Exception:
+                break
         self.__event_end_play()
 
     def __event_begin_play(self):
         if os.path.isfile("temp"):
-            self.__session.import_binary("temp")
+            self.__mode.is_debug = False
+            history = self.__session.import_binary()
+            for cmd in history:
+                self.__input.execute_command(cmd, self.__mode.commands)
+        self.__mode.is_debug = True
         self.__event_tick()
 
     def __event_end_play(self):
         print(">>> Closing the game")
         if self.__mode.state is not GameState.END:
             self.__session.export_binary(self.__input.get_history())
-        self.__input.dump_history()
+        elif os.path.isfile(self.__session.binfile):
+            os.remove(self.__session.binfile)
+        if self.__mode.state is GameState.END:
+            self.__session.export_text(self.__input.get_history())
+        # self.__input.dump_history()
 
     def init_game(self):
         self.__event_begin_play()

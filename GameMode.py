@@ -14,11 +14,12 @@ class GameMode:
     PLAYER_NAME = "Player"
     AI_NAME = "AI"
 
-    def __init__(self):
+    def __init__(self, is_debug):
         self.players = []
         self.is_playing = False
         self.is_running = True
         self.state = GameState.START
+        self.is_debug = is_debug
         self.commands = {
             "start_game": self.start_game,
             "end_game": self.end_game,
@@ -36,40 +37,52 @@ class GameMode:
     def add_player(self, name=PLAYER_NAME):
         for pl in self.players:
             if pl.name == name:
-                print(">>> %s already exist" % pl.name)
+                if self.is_debug:
+                    print(">>> %s already exist" % pl.name)
                 return
         self.players.append(Player(name))
-        print(">>> %s has been added" % name)
+        if self.is_debug:
+            print(">>> %s has been added" % name)
 
     def add_ai(self, name=AI_NAME):
         for pl in self.players:
             if pl.name == name:
-                print(">>> %s already exist" % pl.name)
+                if self.is_debug:
+                    print(">>> %s already exist" % pl.name)
                 return
         self.players.append(AI(name))
-        print(">>> %s has been added"% name)
+        if self.is_debug:
+            print(">>> %s has been added"% name)
 
     def remove_player(self, name):
         for pl in self.players:
             if pl.name == name:
                 self.players.remove(pl)
-                print(">>> %s has been deleted" % pl.name)
+                if self.is_debug:
+                    print(">>> %s has been deleted" % pl.name)
                 return
-        print(">>> %s doesn't exist" % name)
+        if self.is_debug:
+            print(">>> %s doesn't exist" % name)
 
     def add_score(self, player, score):
         for pl in self.players:
             if pl.name == player:
                 pl.add_score(int(score))
+                if self.is_debug:
+                    print(">>> {0} has updated his score: {1}".format(pl.name, pl.score))
 
     def set_score(self, player, score):
         for pl in self.players:
             if pl.name == player:
                 pl.set_score(int(score))
+                if self.is_debug:
+                    print(">>> {0} has updated his score: {1}".format(pl.name, pl.score))
 
     def reset_score_for_all_players(self):
         for player in self.players:
             player.set_score(0)
+        if self.is_debug:
+            print(">>> All players' score has been reset")
 
     def set_up_game(self):
         self.add_player()
@@ -77,7 +90,8 @@ class GameMode:
 
     def start_game(self):
         if not self.is_playing:
-            print(">>> Starting game")
+            if self.is_debug:
+                print(">>> Starting game")
             self.is_playing = True
             self.state = GameState.ROUND
             self.set_up_game()
@@ -90,7 +104,8 @@ class GameMode:
                 reason = "Game closed"
             else:
                 reason = "Unknown reason"
-            print(">>> Game has been ended: {0}".format(reason))
+            if self.is_debug:
+                print(">>> Game has been ended: {0}".format(reason))
             self.is_playing = False
             self.show_players()
             self.reset_score_for_all_players()

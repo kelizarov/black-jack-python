@@ -8,11 +8,9 @@ class Player:
 
     def add_score(self, score):
         self.score = self.score + score
-        print(">>> {0} has new score {1}".format(self.name, self.score))
 
     def set_score(self, score):
         self.score = score
-        print(">>> {0} has new score {1}".format(self.name, self.score))
 
     def give_card(self, card):
         self.cards += card
