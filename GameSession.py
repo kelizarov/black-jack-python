@@ -1,6 +1,5 @@
 import struct
 import gzip
-import textwrap
 import datetime
 
 
@@ -10,27 +9,26 @@ class GameSession:
     FILE_VERSION = b"\x00\x01"
 
     def __init__(self):
-        self.binfile = "temp"
-        self.textfile = "gamelog"
+        self.binfile = ".temp"
+        self.textfile = "logs/gamelog"
         pass
 
-    def export_binary(self, cmd_list, compress=False):
+    def export_binary(self, commands, compress=False):
         def pack_string(string):
             data = string.encode("utf8")
             format = "<H{0}s".format(len(data))
             return struct.pack(format, len(data), data)
         fh = None
         try:
-            print("Writing to file", self.binfile)
             if compress:
                 fh = gzip.open(self.binfile, "wb")
             else:
                 fh = open(self.binfile, "wb")
             fh.write(self.MAGIC)
             fh.write(self.FILE_VERSION)
-            for cmd in cmd_list:
+            for cmd in commands:
                 data = bytearray()
-                data.extend(pack_string(cmd))
+                data.extend(pack_string(cmd[1]))
                 fh.write(data)
             return True
         except Exception as err:
@@ -75,14 +73,13 @@ class GameSession:
             if fh is not None:
                 fh.close()
 
-    def export_text(self, cmd_list):
-        # wrapper = textwrap.TextWrap()
+    def export_text(self, history):
         fh = None
         try:
             filename = "{0}.{1}.log".format(self.textfile, datetime.datetime.now())
             fh = open(filename, "w", encoding="utf8")
-            for cmd in cmd_list:
-                fh.write("{0}\n".format(cmd))
+            for line in history:
+                fh.write("[{0}]: {1}\n".format(line[0], line[1]))
         finally:
             if fh is not None:
                 fh.close()

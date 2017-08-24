@@ -4,10 +4,13 @@ class Player:
         self.name = name
         self.score = score
         self.cards = 0
-        self.commands = {}
+        self.wants_to_leave = False
+        self.commands = {
+            "quit": self.quit
+        }
 
     def add_score(self, score):
-        self.score = self.score + score
+        self.score += score
 
     def set_score(self, score):
         self.score = score
@@ -22,7 +25,13 @@ class Player:
         return self.name
 
     def think(self):
-        print(">>> %s is thinking"% self.name)
+        # print(">>> %s is thinking"% self.name)
+        line = input().rstrip()
+        if line == "quit":
+            self.quit()
+
+    def quit(self):
+        self.wants_to_leave = True
 
     def __repr__(self):
         return "Name: {0} Score: {1} Cards: {2}".format(self.name, self.score, self.cards)
