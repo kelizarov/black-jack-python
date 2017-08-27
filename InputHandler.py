@@ -15,20 +15,17 @@ class InputHandler:
             return self.exec
 
     def add_command(self, line):
-        if self.is_debug:
-            self.commands.append([datetime.datetime.now(), line])
+        self.commands.append([datetime.datetime.now(), line])
 
     def add_log(self, line):
-        if self.is_debug:
-            self.history.append([datetime.datetime.now(), line])
+        self.history.append([datetime.datetime.now(), line])
 
-    def execute_command(self, line, cmd_list):
+    def execute_command(self, line, cmd_list, log_it=True):
         cmd = self.parse_command(line)
         output = ""
         if not cmd or cmd[0] not in cmd_list:
             output = ">>> Unrecognized command"
         else:
-            self.add_command(line)
             for key, value in cmd_list.items():
                 if key == cmd[0]:
                     if len(cmd) == 3:
@@ -40,9 +37,11 @@ class InputHandler:
                     break
             if not output:
                 output = ">>> Error executing command"
-            self.add_log(output)
-        if self.is_debug:
-            print(output)
+            if log_it:
+                self.add_command(line)
+                self.add_log(output)
+        # if self.is_debug:
+        #     print(output)
 
     def get_last_cmd(self):
         return self.history[-1]
