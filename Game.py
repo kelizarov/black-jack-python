@@ -1,7 +1,6 @@
 from GameMode import GameMode, GameState
 from GameSession import GameSession
 import os
-import sys
 
 
 class Game:
@@ -27,24 +26,27 @@ class Game:
             #     print("TypeError: {0}".format(err))
             #     continue
             except (KeyboardInterrupt, EOFError) as err:
-                print(err)
+                self.__mode.input.add_log(err)
                 break
-            # except Exception as err:
-            #     print(err)
-            #     break
+            except Exception as err:
+                self.__mode.input.add_log(err)
+                break
         self.__event_end_play()
 
     def __event_begin_play(self):
         if os.path.isfile(self.__session.binfile):
             try:
                 history = self.__session.import_binary()
+                self.__mode.input.notify = False
+                self.__mode.input.add_log("Recovering old session")
                 for cmd in history:
                     self.__mode.input.execute_command(cmd, self.__mode.commands, False)
                 os.remove(self.__session.binfile)
-                print(">>> Old session has been recovered")
-                self.__mode.set_up_game(True)
+                self.__mode.input.add_log("Old session has been recovered")
+                self.__mode.input.notify = True
+                # self.__mode.set_up_game(True)
             except Exception as err:
-                print(">>> Error while trying to recover old session: {0}".format(err))
+                print("Error while trying to recover old session: {0}".format(err))
                 os.remove(self.__session.binfile)
                 exit()
         else:

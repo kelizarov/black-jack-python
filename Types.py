@@ -43,3 +43,35 @@ class Cards(int):
         KING: 10,
         ACE: 11
     }
+
+    def get_card_name(self, card):
+        if card == Cards.TWO:
+            return "TWO"
+        if card == Cards.THREE:
+            return "THREE"
+        if card == Cards.FOUR:
+            return "FOUR"
+        if card == Cards.FIVE:
+            return "FIVE"
+        if card == Cards.SIX:
+            return "SIX"
+        if card == Cards.SEVEN:
+            return "SEVEN"
+        if card == Cards.EIGHT:
+            return "EIGHT"
+        if card == Cards.NINE:
+            return "NINE"
+        if card == Cards.TEN:
+            return "TEN"
+        if card == Cards.JOKER:
+            return "JOKER"
+        if card == Cards.QUEEN:
+            return "QUEEN"
+        if card == Cards.KING:
+            return "KING"
+        if card == Cards.ACE:
+            return "ACE"
+        return "UNKNOWN"
+
+    def get_card_value(self, card):
+        return self.cards[card]

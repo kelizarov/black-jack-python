@@ -76,8 +76,9 @@ class GameSession:
     def export_text(self, history):
         fh = None
         try:
-            filename = "{0}.{1}.log".format(self.textfile, datetime.datetime.now())
-            fh = open(filename, "w", encoding="utf8")
+            filename = "{0}.{1}.log".format(self.textfile, datetime.datetime.now().date())
+            fh = open(filename, "a", encoding="utf8")
+            fh.write("[{0}]: >>> New game session <<<\n".format(datetime.datetime.now()))
             for line in history:
                 fh.write("[{0}]: {1}\n".format(line[0], line[1]))
         finally:

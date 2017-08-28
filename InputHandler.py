@@ -3,9 +3,9 @@ import datetime
 
 class InputHandler:
 
-    def __init__(self, is_debug=True):
+    def __init__(self, notify=True):
         self.exec = {"", "", ""}
-        self.is_debug = is_debug
+        self.notify = notify
         self.commands = []
         self.history = []
 
@@ -24,7 +24,7 @@ class InputHandler:
         cmd = self.parse_command(line)
         output = ""
         if not cmd or cmd[0] not in cmd_list:
-            output = ">>> Unrecognized command"
+            output = "Unrecognized command"
         else:
             for key, value in cmd_list.items():
                 if key == cmd[0]:
@@ -36,12 +36,16 @@ class InputHandler:
                         output = value()
                     break
             if not output:
-                output = ">>> Error executing command"
+                output = "Error executing command"
             if log_it:
                 self.add_command(line)
                 self.add_log(output)
         # if self.is_debug:
         #     print(output)
+
+    def notify_player(self, player, msg):
+        if self.notify:
+            player.notify(msg)
 
     def get_last_cmd(self):
         return self.history[-1]

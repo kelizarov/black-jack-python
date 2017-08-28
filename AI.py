@@ -14,3 +14,6 @@ class AI(Player):
 
     def think(self, state):
         pass
+
+    def notify(self, msg):
+        pass
