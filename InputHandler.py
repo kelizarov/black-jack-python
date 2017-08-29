@@ -37,11 +37,9 @@ class InputHandler:
                     break
             if not output:
                 output = "Error executing command"
-            if log_it:
-                self.add_command(line)
-                self.add_log(output)
-        # if self.is_debug:
-        #     print(output)
+        if log_it:
+            self.add_command(line)
+            self.add_log(output)
 
     def notify_player(self, player, msg):
         if self.notify:

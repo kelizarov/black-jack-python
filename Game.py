@@ -14,8 +14,6 @@ class Game:
         while self.__mode.is_running:
             try:
                 self.__mode.play()
-                # line = input()
-                # self.__mode.input.execute_command(line, self.__mode.commands)
             # except IndexError as err:
             #     print("IndexError: {0}".format(err))
             #     continue
@@ -44,10 +42,10 @@ class Game:
                 os.remove(self.__session.binfile)
                 self.__mode.input.add_log("Old session has been recovered")
                 self.__mode.input.notify = True
-                # self.__mode.set_up_game(True)
+                self.__mode.set_up_game(True)
             except Exception as err:
                 print("Error while trying to recover old session: {0}".format(err))
-                os.remove(self.__session.binfile)
+                # os.remove(self.__session.binfile)
                 exit()
         else:
             self.__mode.set_up_game()

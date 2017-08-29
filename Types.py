@@ -9,8 +9,9 @@ class GameState(Enum):
 
 class ModeState(Enum):
     BIDDING = 1
-    ROUND = 2
-    RESULT = 3
+    SETTING = 2
+    ROUND = 3
+    RESULT = 4
 
 
 class Cards(int):
@@ -44,7 +45,8 @@ class Cards(int):
         ACE: 11
     }
 
-    def get_card_name(self, card):
+    @staticmethod
+    def get_card_name(card):
         if card == Cards.TWO:
             return "TWO"
         if card == Cards.THREE:
@@ -73,5 +75,6 @@ class Cards(int):
             return "ACE"
         return "UNKNOWN"
 
-    def get_card_value(self, card):
-        return self.cards[card]
+    @staticmethod
+    def get_card_value(card):
+        return Cards.cards[card]
