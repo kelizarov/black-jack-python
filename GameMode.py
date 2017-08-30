@@ -13,6 +13,7 @@ class GameMode:
     PLAYER_NAME = "Player"
     AI_NAME = "AI"
     DEALER_NAME = "Dealer"
+    CARD_LIMIT = 2
 
     def __init__(self):
         self.input = InputHandler()
@@ -34,6 +35,9 @@ class GameMode:
             "show_players": self.show_players,
             "show_player": self.show_player,
             "reset": self.reset,
+            "player_won": self.player_won,
+            "player_lost": self.player_lost,
+            "player_draw": self.player_draw,
             "give_card": self.give_card,
             "place_bid": self.place_bid,
             "exit": self.exit_game
@@ -139,7 +143,6 @@ class GameMode:
         self.input.add_command("place_bid {0} {1}".format(player.name, amount))
         if player is not None:
             self.pool += amount
-            player.pocket -= amount
         self.input.add_log("{0} has bidden {1}".format(player.name, amount))
         return "{0} has bidden {1}".format(player.name, amount)
 
@@ -173,7 +176,7 @@ class GameMode:
 
     def players_got_all_cards(self):
         for player in self.players:
-            if player.number_of_cards < 2:
+            if player.number_of_cards < self.CARD_LIMIT:
                 return False
         return True
 
@@ -207,7 +210,6 @@ class GameMode:
             self.is_playing = True
             self.game_state = GameState.PLAYING
             self.mode_state = ModeState.BIDDING
-            self.reset()
         self.input.add_log(output)
         return output
 
@@ -238,39 +240,77 @@ class GameMode:
         self.input.add_log(output)
         return output
 
-    def player_lost(self, player):
+    def player_lost(self, player, bid):
         if isinstance(player, str):
             player = self.get_player_by_name(player)
-        self.input.add_command("player_lost {0}".format(player.name))
+        bid = int(bid)
+        self.input.add_command("player_lost {0} {1}".format(player.name, bid))
         self.dealer.add_score(1)
-        self.input.notify_player(player, "You have lost {0} credits".format(int(player.bid)))
-        self.input.add_log("{0} has lost {1} points".format(player.name, int(player.bid)))
+        player.pocket -= bid
+        self.input.notify_player(player, "You have lost {0} credits".format(bid))
+        self.input.add_log("{0} has lost {1} points".format(player.name, bid))
 
-    def player_won(self, player):
+    def player_won(self, player, bid):
         if isinstance(player, str):
             player = self.get_player_by_name(player)
-        self.input.add_command("player_won {0}".format(player.name))
+        bid = int(bid)
+        self.input.add_command("player_won {0} {1}".format(player.name, bid))
         player.add_score(1)
-        player.pocket += int(player.bid * 1.5)
-        self.input.notify_player(player, "You have won {0} credits".format(int(player.bid * 1.5)))
-        self.input.add_log("{0} has won {1} points".format(player.name, int(player.bid)))
+        player.pocket += int(bid * 0.5)
+        self.input.notify_player(player, "You have won {0} credits".format(int(bid * 0.5)))
+        self.input.add_log("{0} has won {1} points".format(player.name, int(bid * 0.5)))
 
     def player_draw(self, player):
         if isinstance(player, str):
             player = self.get_player_by_name(player)
         self.input.add_command("player_draw {0}".format(player.name))
-        player.pocket += player.bid
         self.input.notify_player(player, "It's a draw. Nobody wins")
         self.input.add_log("{0} has same cards as Dealer. Nobody wins.".format(player.name))
 
     def determine_winner(self, player):
         if self.dealer.points > 21 or player.points > self.dealer.points:
-            self.player_won(player)
+            self.player_won(player, player.bid)
         elif player.points == self.dealer.points:
             self.player_draw(player)
         elif player.points > 21 or player.points < self.dealer.points:
-            self.player_lost(player)
+            self.player_lost(player, player.bid)
         player.bid = 0
+
+    def mode_bidding(self):
+        for player in self.players:
+            if player.pocket > 0:
+                self.input.notify_player(player, "Place your bid. You have {0} credits.".format(player.pocket))
+            else:
+                self.input.notify_player(player, "You don't have any credits. Type 'quit' to exit.")
+            player.think(self.mode_state)
+            if player.bid > 0:
+                self.place_bid(player, player.bid)
+        if self.players_ready():
+            self.mode_state = ModeState.SETTING
+
+    def mode_setting(self):
+        self.give_card(self.dealer, random.randint(Cards.TWO, Cards.ACE))
+        while not self.players_got_all_cards():
+            for player in self.players:
+                self.give_card(player, random.randint(Cards.TWO, Cards.ACE))
+        self.mode_state = ModeState.ROUND
+
+    def mode_round(self):
+        for player in self.players:
+            player.think(self.mode_state)
+            if not self.give_card(player, random.randint(Cards.TWO, Cards.ACE)):
+                self.mode_state = ModeState.RESULT
+                break
+        if not self.give_card(self.dealer, random.randint(Cards.TWO, Cards.ACE)):
+            self.mode_state = ModeState.RESULT
+
+    def mode_result(self):
+        self.end_game()
+        for player in self.players:
+            self.determine_winner(player)
+        self.show_players()
+        self.reset()
+        self.start_game()
 
     def play(self):
         if self.is_playing:
@@ -278,33 +318,10 @@ class GameMode:
                 self.exit_game()
             self.check_players()
             if self.mode_state == ModeState.BIDDING:
-                for player in self.players:
-                    if player.pocket > 0:
-                        self.input.notify_player(player, "Place your bid. You have {0} credits.".format(player.pocket))
-                    else:
-                        self.input.notify_player(player, "You don't have any credits. Type 'quit' or Ctrl+C to exit.")
-                    player.think(self.mode_state)
-                    if player.bid > 0:
-                        self.place_bid(player, player.bid)
-                if self.players_ready():
-                    self.mode_state = ModeState.SETTING
+                self.mode_bidding()
             elif self.mode_state == ModeState.SETTING:
-                self.give_card(self.dealer, random.randint(Cards.TWO, Cards.ACE))
-                while not self.players_got_all_cards():
-                    for player in self.players:
-                        self.give_card(player, random.randint(Cards.TWO, Cards.ACE))
-                self.mode_state = ModeState.ROUND
+                self.mode_setting()
             elif self.mode_state == ModeState.ROUND:
-                for player in self.players:
-                    player.think(self.mode_state)
-                    if not self.give_card(player, random.randint(Cards.TWO, Cards.ACE)):
-                        self.mode_state = ModeState.RESULT
-                        break
-                if not self.give_card(self.dealer, random.randint(Cards.TWO, Cards.ACE)):
-                    self.mode_state = ModeState.RESULT
+                self.mode_round()
             elif self.mode_state == ModeState.RESULT:
-                self.end_game()
-                for player in self.players:
-                    self.determine_winner(player)
-                self.show_players()
-                self.start_game()
+                self.mode_result()

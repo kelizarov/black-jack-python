@@ -55,5 +55,5 @@ class InputHandler:
         return self.history
 
     def dump_history(self):
-        for cmd in self.history:
+        for cmd in self.commands:
             print(">", cmd)

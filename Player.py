@@ -50,8 +50,10 @@ class Player:
                     self.place_bid(float(line))
             elif state == ModeState.ROUND:
                 pass
-        except (EOFError, KeyboardInterrupt):
-            self.quit()
+        # except (EOFError, KeyboardInterrupt):
+        #     self.quit()
+        finally:
+            pass
 
     def quit(self):
         self.wants_to_leave = True
